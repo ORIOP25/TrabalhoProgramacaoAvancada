@@ -10,7 +10,7 @@ from mysql.connector import errorcode               # Códigos de erro específi
 # --- Base de Dados ---
 # Configuração da ligação à base de dados MySQL
 config = {
-    'user': 'rodrigo',                         # Nome de utilizador da base de dados (alterar user)
+    'user': 'dev',                         # Nome de utilizador da base de dados (alterar user)
     'password': '',                         # Palavra-passe da base de dados (alterar password)
     'host': 'localhost',                    # Endereço do servidor
     'database': 'planejamento_viagens',     # Nome da base de dados
