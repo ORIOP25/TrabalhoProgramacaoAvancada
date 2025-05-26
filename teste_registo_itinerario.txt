@@ -1,0 +1,24 @@
+📍 De Mercado do Bolhão até Mosteiro dos Jerónimos
+     Tipo de Atividade - Viagem Cultural
+     Data - 20/05/2025
+     Hora - 09:00
+     Distância - 321 km
+     Duração - 3 horas 9 min
+     Notas - teste 1
+
+📍 De Lisboa até Algarve
+     Tipo de Atividade - Viagem Gastronómica
+     Data - 20/05/2025
+     Hora - 16:00
+     Distância - 252 km
+     Duração - 2 horas 34 min
+     Notas - teste 3
+
+📍 De Algarve até Estádio do Dragão
+     Tipo de Atividade - Viagem Desportiva
+     Data - 25/05/2025
+     Hora - 15:00
+     Distância - 523 km
+     Duração - 4 horas 47 min
+     Notas - teste 2
+
