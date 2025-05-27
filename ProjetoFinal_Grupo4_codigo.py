@@ -9,19 +9,38 @@ from mysql.connector import errorcode               # Códigos de erro específi
 
 # --- Base de Dados ---
 # Configuração da ligação à base de dados MySQL
+# Configuração BASE (sem o campo "database" para a criação caso ainda nao exista)
+config_base = {
+    'user': 'root',     # Nome de utilizador da base de dados (alterar user)
+    'password': '',     # Palavra-passe da base de dados (alterar password)
+    'host': 'localhost'
+}
+# Configuração COMPLETA (com a base de dados já criada)
 config = {
-    'user': 'dev',                         # Nome de utilizador da base de dados (alterar user)
-    'password': '',                         # Palavra-passe da base de dados (alterar password)
-    'host': 'localhost',                    # Endereço do servidor
-    'database': 'planejamento_viagens',     # Nome da base de dados
-    'raise_on_warnings': True               # Mostra avisos como exceções
+    'user': 'root',     # Nome de utilizador da base de dados (alterar user)
+    'password': '',     # Palavra-passe da base de dados (alterar password)
+    'host': 'localhost',
+    'database': 'planejamento_viagens',
+    'raise_on_warnings': True
 }
 
+# Função que cria a base de dados
+def criar_base_de_dados():
+    try:
+        conn = mysql.connector.connect(**config_base)
+        cursor = conn.cursor()
+        cursor.execute("CREATE DATABASE IF NOT EXISTS planejamento_viagens DEFAULT CHARACTER SET 'utf8mb4'")
+        print("Base de dados criada ou já existe.")
+    except mysql.connector.Error as err:
+        print(f"Erro ao criar base de dados: {err}")
+    finally:
+        cursor.close()
+        conn.close()
+
 # Função responsável por criar a base de dados e as tabelas
-def criar_base_e_tabelas():
+def criar_tabelas():
     conn = None         # Variável para a ligação à base de dados
     cursor = None       # Variável para executar comandos SQL
-
     try:
         # Estabelece ligação ao servidor MySQL (ainda sem selecionar a base de dados)
         conn = mysql.connector.connect(
@@ -31,16 +50,6 @@ def criar_base_e_tabelas():
             database=config['database']
         )
         cursor = conn.cursor()      # Cria o cursor para enviar comandos SQL
-        # Cria a base de dados se ainda não existir, com codificação UTF8mb4 (suporte a emojis, ...)
-        cursor.execute("CREATE DATABASE IF NOT EXISTS planejamento_viagens DEFAULT CHARACTER SET 'utf8mb4'")
-        print("Base de dados criada ou já existe.")
-        conn.database = config['database']      # Seleciona a base de dados criada
-
-        cursor.execute("DELETE FROM itinerario_atracoes")
-        cursor.execute("DELETE FROM itinerarios")
-        cursor.execute("DELETE FROM atracoes")
-        cursor.execute("DELETE FROM utilizadores")
-        conn.commit()
 
         # Definição da tabela "utilizadores" (NÃO UTILIZADA)
         tabela_utilizadores = """
@@ -53,13 +62,12 @@ def criar_base_e_tabelas():
         # Definição da tabela "itinerarios"  (NÃO UTILIZADA)
         tabela_itinerarios = """
         CREATE TABLE IF NOT EXISTS itinerarios (
-            id INT AUTO_INCREMENT PRIMARY KEY,          -- ID automático
-            local_inicial VARCHAR(255) NOT NULL,
-            local_final VARCHAR(255) NOT NULL,
-            tipo VARCHAR(100) NOT NULL,
-            data DATE NOT NULL,
-            horario TIME NOT NULL,
-            notas_opcionais TEXT
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            id_utilizador INT NOT NULL,
+            nome_itinerario VARCHAR(255) NOT NULL,
+            data_inicio DATE,
+            data_fim DATE,
+            FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id) ON DELETE CASCADE
         )
         """
         # Definição da tabela "atracoes"  (UTILIZADA)
@@ -79,6 +87,7 @@ def criar_base_e_tabelas():
         cursor.execute(tabela_atracoes)
         print("Tabelas criadas ou já existem.")     # Confirmação visual no terminal
         conn.commit()       # Confirma as alterações na base de dados
+
     # Tratamento de erros do MySQL
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -132,20 +141,18 @@ def ler_todos_itinerarios():
         cursor.close()
         conn.close()
 
-# Função para apagar (remover) um itinerário da base de dados com base no seu ID
-def apagar_itinerario(id_itinerario):
+# Função para apagar os dados da tabela itinerários da base de dados
+def apagar_todos_itinerarios():
     try:
         # Estabelece ligação à base de dados com as configurações fornecidas
         conn = mysql.connector.connect(**config)
         cursor = conn.cursor()
-        # Executa um comando SQL para apagar o itinerário com o ID fornecido
-        cursor.execute("DELETE FROM itinerarios WHERE id = %s", (id_itinerario,))
-        conn.commit()       # Confirma a alteração na base de dados
-        print(f"Itinerário com id {id_itinerario} apagado.")        # Mensagem de sucesso no terminal
-    # Captura e exibe qualquer erro que ocorra durante o processo
+        # Executa comando SQL para apagar todos os registros da tabela itinerarios
+        cursor.execute("DELETE FROM itinerarios")
+        conn.commit()  # Confirma a alteração na base de dados
+        print("Itinerarios apagados.")  # Mensagem de sucesso
     except mysql.connector.Error as err:
-        print(f"Erro ao apagar itinerário: {err}")
-    # Garante que o cursor e a conexão são fechados, independentemente do sucesso ou erro
+        print(f"Erro ao apagar dados: {err}")
     finally:
         cursor.close()
         conn.close()
@@ -195,20 +202,18 @@ def ler_todas_atracoes():
         cursor.close()
         conn.close()
 
-# Função para apagar (remover) uma atração da base de dados com base no seu ID
-def apagar_atracao(id_atracao):
+# Função para apagar os dados da tabela atrações da base de dados
+def apagar_todas_atracoes():
     try:
         # Estabelece ligação à base de dados usando as configurações definidas no dicionário config
         conn = mysql.connector.connect(**config)
         cursor = conn.cursor()
-        # Executa o comando SQL para apagar a atração com o ID especificado
-        cursor.execute("DELETE FROM atracoes WHERE id = %s", (id_atracao,))
-        conn.commit()       # Confirma (commita) a alteração na base de dados
-        print(f"Atração com id {id_atracao} apagada.")      # Informa no terminal que a atração foi apagada com sucesso
-    # Captura e imprime qualquer erro que possa ocorrer durante a operação
+        # Executa o comando SQL para apagar todas as atrações
+        cursor.execute("DELETE FROM atracoes")
+        conn.commit()  # Confirma a alteração na base de dados
+        print("Atracoes apagadas.")  # Mensagem de sucesso
     except mysql.connector.Error as err:
-        print(f"Erro ao apagar atração: {err}")
-    # Garante que o cursor e a conexão são fechados corretamente, mesmo que ocorra erro
+        print(f"Erro ao apagar dados: {err}")
     finally:
         cursor.close()
         conn.close()
@@ -237,8 +242,12 @@ def inserir_atracoes_exemplo():
 # Este bloco só é executado se este ficheiro for executado diretamente,
 # e não quando for importado como módulo noutra parte do programa
 if __name__ == "__main__":
+    # Cria a base de dados
+    criar_base_de_dados()
     # Chama a função para criar a base de dados e as tabelas (caso ainda não existam)
-    criar_base_e_tabelas()
+    criar_tabelas()
+    # Limpa todos as atrações antes de inserir
+    apagar_todas_atracoes()
     # Insere atrações de exemplo na base de dados (para povoar a tabela 'atracoes')
     inserir_atracoes_exemplo()
     # Imprime todas as atrações existentes na tabela 'atracoes'
